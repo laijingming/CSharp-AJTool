@@ -28,43 +28,90 @@
         /// </summary>
         private void InitializeComponent()
         {
-            button1 = new Button();
+            buttonStartCheck = new Button();
             treeView1 = new TreeView();
+            dateTimePicker1 = new DateTimePicker();
+            dateTimePicker2 = new DateTimePicker();
+            label1 = new Label();
+            buttonAddDir = new Button();
             SuspendLayout();
             // 
-            // button1
+            // buttonStartCheck
             // 
-            button1.Location = new Point(35, 36);
-            button1.Name = "button1";
-            button1.Size = new Size(143, 35);
-            button1.TabIndex = 0;
-            button1.Text = "button1";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            buttonStartCheck.Location = new Point(12, 128);
+            buttonStartCheck.Name = "buttonStartCheck";
+            buttonStartCheck.Size = new Size(192, 35);
+            buttonStartCheck.TabIndex = 0;
+            buttonStartCheck.Text = "开始检测";
+            buttonStartCheck.UseVisualStyleBackColor = true;
+            buttonStartCheck.Click += buttonStartCheck_Click;
             // 
             // treeView1
             // 
-            treeView1.Location = new Point(205, 36);
+            treeView1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            treeView1.Location = new Point(210, 0);
             treeView1.Name = "treeView1";
-            treeView1.Size = new Size(583, 384);
+            treeView1.Size = new Size(590, 450);
             treeView1.TabIndex = 1;
+            // 
+            // dateTimePicker1
+            // 
+            dateTimePicker1.Location = new Point(12, 29);
+            dateTimePicker1.Name = "dateTimePicker1";
+            dateTimePicker1.Size = new Size(192, 23);
+            dateTimePicker1.TabIndex = 2;
+            // 
+            // dateTimePicker2
+            // 
+            dateTimePicker2.Location = new Point(12, 58);
+            dateTimePicker2.Name = "dateTimePicker2";
+            dateTimePicker2.Size = new Size(192, 23);
+            dateTimePicker2.TabIndex = 2;
+            // 
+            // label1
+            // 
+            label1.AutoSize = true;
+            label1.Location = new Point(12, 9);
+            label1.Name = "label1";
+            label1.Size = new Size(56, 17);
+            label1.TabIndex = 3;
+            label1.Text = "时间范围";
+            // 
+            // buttonAddDir
+            // 
+            buttonAddDir.Location = new Point(12, 87);
+            buttonAddDir.Name = "buttonAddDir";
+            buttonAddDir.Size = new Size(192, 35);
+            buttonAddDir.TabIndex = 0;
+            buttonAddDir.Text = "添加目录";
+            buttonAddDir.UseVisualStyleBackColor = true;
+            buttonAddDir.Click += buttonAddDir_Click;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(label1);
+            Controls.Add(dateTimePicker2);
+            Controls.Add(dateTimePicker1);
             Controls.Add(treeView1);
-            Controls.Add(button1);
+            Controls.Add(buttonAddDir);
+            Controls.Add(buttonStartCheck);
             Name = "Form1";
             Text = "Form1";
             Load += Form1_Load;
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
 
-        private Button button1;
+        private Button buttonStartCheck;
         private TreeView treeView1;
+        private DateTimePicker dateTimePicker1;
+        private DateTimePicker dateTimePicker2;
+        private Label label1;
+        private Button buttonAddDir;
     }
 }

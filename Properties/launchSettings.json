@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AJTOOL": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
