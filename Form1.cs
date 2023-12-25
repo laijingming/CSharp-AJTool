@@ -12,7 +12,88 @@ namespace AJTOOL
         {
             InitializeComponent();
         }
-        
+        #region
+        class CustomTreeNode : TreeNode
+        {   
+            public CustomTreeNode(string path) 
+            {
+                Path = path;
+                Text = Path;
+            }
+            public string Path { get; set; }
+            public int Count { get; set; }
+
+            public DateTime LastDateTime { get; set; }
+
+            public void CustomText()
+            {
+                if (Nodes.Count>0)
+                {
+                    Count = 0;
+                    foreach (CustomTreeNode item in Nodes)
+                    {
+                        if (LastDateTime < item.LastDateTime)
+                        {
+                            LastDateTime = item.LastDateTime;
+                        }
+                        Count += item.Count;
+                    }
+                }
+                
+                if (TreeView!=null)
+                {
+                    TreeView.Invoke(new Action(() =>
+                    {
+                        _customText();
+                    }));
+                }
+                else
+                {
+                    _customText();
+                }
+            }
+
+            private void _customText()
+            {
+                if (File.Exists(Path))
+                {
+                    Text = $"{Path} ---修改时间{LastDateTime}";
+
+                }
+                else
+                {
+                    if (Nodes.Count>0)
+                    {
+                        Text = $"{Path} ---数量{Count} 修改时间{LastDateTime}";
+                    }
+                    else
+                    {
+                        Text = Path;
+                    }
+                }
+            }
+
+            public void InsertNode(CustomTreeNode subNode) 
+            {
+                // 检查节点所属的树视图是否存在
+                if (TreeView != null)
+                {
+                    // 使用 Invoke 方法确保在 UI 线程上执行插入操作
+                    TreeView.Invoke(new Action(() =>
+                    {
+                        Nodes.Add(subNode);
+                        Expand();
+                    }));
+                }
+                else
+                {
+                    // 如果当前已在 UI 线程上，直插入节点
+                    Nodes.Add(subNode);
+                }
+            }
+        }
+        #endregion
+
         #region 逻辑
 
         /// <summary>
@@ -33,87 +114,54 @@ namespace AJTOOL
         /// </summary>
         /// <param name="directoryPath"></param>
         /// <param name="node"></param>
-        private bool LoadDirectory(string directoryPath, TreeNode node)
+        private DateTime LoadDirectory(CustomTreeNode node)
         {
-
+            DateTime lastModifiedDateTime = new();
             try
-            {
-                bool hasModifiedFiles = false;
-
+            {   
                 // 获取当前目录的子目录
-                string[] subDirectories = Directory.GetDirectories(directoryPath);
+                string[] subDirectories = Directory.GetDirectories(node.Path);
                 // 处理当前目录下的子目录
                 foreach (string subDirectory in subDirectories)
                 {
                     //对节点目录进行检测
-                    TreeNode treeNode = new (Path.GetFileName(subDirectory));
-                    bool hasModified = LoadDirectory(subDirectory, treeNode);
-                    if (hasModified)
+                    CustomTreeNode subNode = new(subDirectory);
+                    lastModifiedDateTime = LoadDirectory(subNode);
+                    if (subNode.Nodes.Count > 0)
                     {
-                        InsertNode(node, treeNode);
+                        subNode.LastDateTime = lastModifiedDateTime;
+                        subNode.CustomText();
+                        node.InsertNode(subNode);
+                        //InsertNode(node, treeNode);
                     }
                 }
+                node.CustomText();
 
                 //检测文件
-                string[] files = Directory.GetFiles(directoryPath);
+                string[] files = Directory.GetFiles(node.Path);
                 foreach (string file in files)
                 {
                     // 处理在时间段内修改的文件
                     DateTime lastModified = GetResourceLastWriteTime(file);
-                    if (lastModified >= dateTimePicker1.Value && lastModified <= dateTimePicker2.Value)//录入在检索范围文件
+                    if (lastModified >= dateTimePicker1.Value && lastModified <= dateTimePicker2.Value)
                     {
-                        string str = $"{Path.GetFileName(file)} ---------最后修改时间：{lastModified}";
-                        InsertNode(node, new TreeNode() { Text = str, ForeColor = Color.Red, Tag = lastModified });
-                        hasModifiedFiles = true;
+                        if (node.Tag == null || (DateTime)node.Tag <= lastModified)
+                        {
+                            lastModifiedDateTime = lastModified;//记录目录最后修改时间
+                        }
+                        CustomTreeNode fileNode = new(file) { ForeColor = Color.Red, LastDateTime = lastModified, Count=1 };
+                        fileNode.CustomText();
+                        node.InsertNode(fileNode);
                     }
-                    
                 }
-                return hasModifiedFiles;
 
             }
             catch (UnauthorizedAccessException ex)
             {
                 UpdateNode(node, $"无法访问目录 {ex.Message}");
-                return false;
             }
+            return lastModifiedDateTime;
 
-        }
-
-        /// <summary>
-        /// 加入节点
-        /// </summary>
-        /// <param name="resourcePath">资源路径</param>
-        /// <param name="node">当前节点</param>
-        /// <param name="isDir">当前路径是否为目录</param>
-        /// <returns></returns>
-        private void AddResourceNode(string resourcePath, TreeNode node, bool isDir = true)
-        {
-
-            
-
-            string str = $"{Path.GetFileName(resourcePath)} ---------最后修改时间：{GetResourceLastWriteTime(resourcePath)}";
-            if (!isDir)//如果不是目录，直接添加叶子节点，并返回当前节点
-            {
-                DateTime lastModified = GetResourceLastWriteTime(resourcePath);
-                if (lastModified >= dateTimePicker1.Value && lastModified <= dateTimePicker2.Value)//录入在检索范围文件
-                {
-                    InsertNode(node, new TreeNode() { Text = str, ForeColor = Color.Red, Tag = GetResourceLastWriteTime(resourcePath) });
-                }
-            }
-            else
-            {
-
-                //如果是目录新增分支节点
-                TreeNode treeNode = new TreeNode() { Text = str, ForeColor = Color.Blue, Tag = GetResourceLastWriteTime(resourcePath) };
-                InsertNode(node, treeNode);
-
-
-                string path = node.Text;
-                UpdateNode(node, node.Text + "-----检测中:" + resourcePath);
-                //对节点目录进行检测
-                //Check(resourcePath, treeNode);
-                UpdateNode(node, path);
-            }
         }
 
         /// <summary>
@@ -123,12 +171,14 @@ namespace AJTOOL
         /// <param name="aNode"></param>
         private void InsertNode(TreeNode node, TreeNode aNode) 
         {
+            // 检查节点所属的树视图是否存在
             if (node.TreeView != null)
             {
-                // 如果需要，使用 Invoke 方法确保在 UI 线程上执行插入操作
+                // 使用 Invoke 方法确保在 UI 线程上执行插入操作
                 node.TreeView.Invoke(new Action(() =>
                 {
                     node.Nodes.Add(aNode);
+                    node.Expand();
                 }));
             }
             else
@@ -137,7 +187,7 @@ namespace AJTOOL
                 node.Nodes.Add(aNode);
             }
 
- 
+
         }
 
         /// <summary>
@@ -147,23 +197,20 @@ namespace AJTOOL
         /// <param name="text"></param>
         private void UpdateNode(TreeNode node, string text) 
         {
-            if (node == null || node.TreeView == null)
+            // 检查节点所属的树视图是否存在
+            if (node.TreeView != null)
             {
-                return;
-            }
-            // 检查是否需要跨线程访问 UI 元素
-            if (node.TreeView.InvokeRequired)
-            {
-                // 如果需要，使用 Invoke 方法确保在 UI 线程上执行更新操作
+                // 使用 Invoke 方法确保在 UI 线程上执行插入操作
                 node.TreeView.Invoke(new Action(() =>
                 {
-                    node.Text = text; // 更新节点的文本内容
+                    node.Text = text;
                 }));
             }
             else
             {
-                // 如果当前已在 UI 线程上，直接更新节点的文本内容
+                // 如果当前已在 UI 线程上，直插入节点
                 node.Text = text;
+
             }
         }
 
@@ -192,7 +239,7 @@ namespace AJTOOL
                 node.Nodes.Clear();
                 Task.Run(() =>
                 {
-                    LoadDirectory(node.Text, node);
+                    LoadDirectory((CustomTreeNode)node);
                 });
             }
         }
@@ -208,19 +255,23 @@ namespace AJTOOL
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
             {
                 // 用户选择的目录路径
-                string selectedFolderPath = folderBrowserDialog.SelectedPath;
+                CustomTreeNode customTreeNode = new(folderBrowserDialog.SelectedPath);
                 // 将目录加入节点
-                treeView.Nodes.Add(selectedFolderPath);
+                treeView.Nodes.Add(customTreeNode);
             }
         }
 
+
+
         #endregion
+
 
         private void Form1_Load(object sender, EventArgs e)
         {
             initDateTimePicker(dateTimePicker1,dateTimePicker2);
         }
 
+        
 
         private void buttonStartCheck_Click(object sender, EventArgs e)
         {
