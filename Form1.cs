@@ -17,10 +17,10 @@ namespace AJTOOL
         {   
             public CustomTreeNode(string path) 
             {
-                Path = path;
-                Text = Path;
+                ResourePath = path;
+                Text = path;
             }
-            public string Path { get; set; }
+            public string ResourePath { get; set; }
             public int Count { get; set; }
 
             public DateTime LastDateTime { get; set; }
@@ -55,20 +55,25 @@ namespace AJTOOL
 
             private void _customText()
             {
-                if (File.Exists(Path))
+                string path = Path.GetFileName(ResourePath);
+                if (this.Parent==null)
                 {
-                    Text = $"{Path} ---修改时间{LastDateTime}";
+                    path = ResourePath;
+                }
+                if (File.Exists(ResourePath))
+                {
+                    Text = $"{path} ---修改时间{LastDateTime}";
 
                 }
                 else
                 {
                     if (Nodes.Count>0)
                     {
-                        Text = $"{Path} ---数量{Count} 修改时间{LastDateTime}";
+                        Text = $"{path} ---数量{Count} 修改时间{LastDateTime}";
                     }
                     else
                     {
-                        Text = Path;
+                        Text = path;
                     }
                 }
             }
@@ -89,6 +94,29 @@ namespace AJTOOL
                 {
                     // 如果当前已在 UI 线程上，直插入节点
                     Nodes.Add(subNode);
+                }
+            }
+
+            /// <summary>
+            /// 更新节点内容
+            /// </summary>
+            /// <param name="node"></param>
+            /// <param name="text"></param>
+            public void UpdateNode(string text)
+            {
+                // 检查节点所属的树视图是否存在
+                if (TreeView != null)
+                {
+                    // 使用 Invoke 方法确保在 UI 线程上执行插入操作
+                    TreeView.Invoke(new Action(() =>
+                    {
+                        Text = text;
+                    }));
+                }
+                else
+                {
+                    // 如果当前已在 UI 线程上，直插入节点
+                    Text = text;
                 }
             }
         }
@@ -120,7 +148,7 @@ namespace AJTOOL
             try
             {   
                 // 获取当前目录的子目录
-                string[] subDirectories = Directory.GetDirectories(node.Path);
+                string[] subDirectories = Directory.GetDirectories(node.ResourePath);
                 // 处理当前目录下的子目录
                 foreach (string subDirectory in subDirectories)
                 {
@@ -138,7 +166,7 @@ namespace AJTOOL
                 node.CustomText();
 
                 //检测文件
-                string[] files = Directory.GetFiles(node.Path);
+                string[] files = Directory.GetFiles(node.ResourePath);
                 foreach (string file in files)
                 {
                     // 处理在时间段内修改的文件
@@ -158,7 +186,7 @@ namespace AJTOOL
             }
             catch (UnauthorizedAccessException ex)
             {
-                UpdateNode(node, $"无法访问目录 {ex.Message}");
+                node.UpdateNode($"无法访问目录 {ex.Message}");
             }
             return lastModifiedDateTime;
 
