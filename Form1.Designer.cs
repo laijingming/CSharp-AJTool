@@ -34,6 +34,7 @@
             dateTimePicker2 = new DateTimePicker();
             label1 = new Label();
             buttonAddDir = new Button();
+            buttonStop = new Button();
             SuspendLayout();
             // 
             // buttonStartCheck
@@ -42,7 +43,7 @@
             buttonStartCheck.Name = "buttonStartCheck";
             buttonStartCheck.Size = new Size(192, 35);
             buttonStartCheck.TabIndex = 0;
-            buttonStartCheck.Text = "开始检测";
+            buttonStartCheck.Text = "开始搜索";
             buttonStartCheck.UseVisualStyleBackColor = true;
             buttonStartCheck.Click += buttonStartCheck_Click;
             // 
@@ -87,6 +88,16 @@
             buttonAddDir.UseVisualStyleBackColor = true;
             buttonAddDir.Click += buttonAddDir_Click;
             // 
+            // buttonStop
+            // 
+            buttonStop.Location = new Point(12, 169);
+            buttonStop.Name = "buttonStop";
+            buttonStop.Size = new Size(192, 35);
+            buttonStop.TabIndex = 0;
+            buttonStop.Text = "停止搜索";
+            buttonStop.UseVisualStyleBackColor = true;
+            buttonStop.Click += buttonStop_Click;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 17F);
@@ -97,9 +108,10 @@
             Controls.Add(dateTimePicker1);
             Controls.Add(treeView1);
             Controls.Add(buttonAddDir);
+            Controls.Add(buttonStop);
             Controls.Add(buttonStartCheck);
             Name = "Form1";
-            Text = "Form1";
+            Text = "搜索磁盘每天新增修改文件";
             Load += Form1_Load;
             ResumeLayout(false);
             PerformLayout();
@@ -113,5 +125,6 @@
         private DateTimePicker dateTimePicker2;
         private Label label1;
         private Button buttonAddDir;
+        private Button buttonStop;
     }
 }
