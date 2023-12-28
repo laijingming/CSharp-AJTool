@@ -191,22 +191,22 @@ namespace AJTOOL
         }
 
 
-        //开始检测
+        // 开始检测按钮点击事件
         private void buttonStartCheck_Click(object sender, EventArgs e)
         {
             StartCheck(treeView1, dateTimePicker1.Value, dateTimePicker2.Value);
         }
 
-        //添加目录
-        private void buttonAddDir_Click(object sender, EventArgs e)
-        {
-            AddDir(treeView1);
-        }
-
-        //停止检测
+        //停止检测按钮点击事件
         private void buttonStop_Click(object sender, EventArgs e)
         {
             StopCheck();
+        }
+
+        //添加目录按钮点击事件
+        private void buttonAddDir_Click(object sender, EventArgs e)
+        {
+            AddDir(treeView1);
         }
     }
 }
