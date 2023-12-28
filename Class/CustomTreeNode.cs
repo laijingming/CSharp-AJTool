@@ -3,68 +3,28 @@ namespace AJTOOL.Class
 {
     internal class CustomTreeNode : TreeNode
     {
+        /// <summary>
+        /// 资源类型 1:文件 2:文件夹 3:头节点
+        /// </summary>
+        private int pathType = 0;
         public CustomTreeNode(string path)
         {
             ResourePath = path;
             Text = path;
         }
+        /// <summary>
+        /// 资源地址
+        /// </summary>
         public string ResourePath { get; set; }
+        /// <summary>
+        /// 拥有文件数量
+        /// </summary>
         public int Count { get; set; }
-
+        /// <summary>
+        /// 最后修改时间
+        /// </summary>
         public DateTime LastDateTime { get; set; }
-
-        public void CustomText()
-        {
-            if (Nodes.Count > 0)
-            {
-                Count = 0;
-                foreach (CustomTreeNode item in Nodes)
-                {
-                    if (LastDateTime < item.LastDateTime)
-                    {
-                        LastDateTime = item.LastDateTime;
-                    }
-                    Count += item.Count;
-                }
-            }
-
-            if (TreeView != null)
-            {
-                TreeView.Invoke(new Action(() =>
-                {
-                    _customText();
-                }));
-            }
-            else
-            {
-                _customText();
-            }
-        }
-
-        private void _customText()
-        {
-            string path = Path.GetFileName(ResourePath);
-            if (Parent == null)
-            {
-                path = ResourePath;
-            }
-            if (File.Exists(ResourePath))
-            {
-                Text = $"{path} ---时间：{LastDateTime}";
-
-            }
-            else
-            {
-                if (Nodes.Count > 0)
-                {
-                    Text = $"{path} ---{Count} 时间:{LastDateTime}";
-                }
-                else
-                {
-                    Text = path;
-                }
-            }
-        }
+        
         /// <summary>
         /// 插入节点
         /// </summary>
@@ -73,7 +33,7 @@ namespace AJTOOL.Class
         {
             // 检查节点所属的树视图是否存在
             if (TreeView != null)
-            {
+            {   
                 // 使用 Invoke 方法确保在 UI 线程上执行插入操作
                 TreeView.Invoke(new Action(() =>
                 {
@@ -86,29 +46,66 @@ namespace AJTOOL.Class
                 // 如果当前已在 UI 线程上，直插入节点
                 Nodes.Add(subNode);
             }
+            subNode.UpdateNodeUI();
         }
 
         /// <summary>
-        /// 更新节点内容
+        /// 更新显示文本
         /// </summary>
-        /// <param name="node"></param>
-        /// <param name="text"></param>
-        public void UpdateNode(string text)
+        public void UpdateNodeUI()
         {
-            // 检查节点所属的树视图是否存在
+            SetTimeAndCount();
             if (TreeView != null)
             {
-                // 使用 Invoke 方法确保在 UI 线程上执行插入操作
                 TreeView.Invoke(new Action(() =>
                 {
-                    Text = text;
+                    SetText();
                 }));
             }
             else
             {
-                // 如果当前已在 UI 线程上，直插入节点
-                Text = text;
+                SetText();
             }
         }
+        #region 私有
+        /// <summary>
+        /// 设置最后修改时间和节点文件数量
+        /// </summary>
+        private void SetTimeAndCount()
+        {   
+            if (Nodes.Count <= 0) return;//过滤叶子节点
+            Count = 0;
+            foreach (CustomTreeNode item in Nodes)
+            {
+                if (LastDateTime < item.LastDateTime)
+                {
+                    LastDateTime = item.LastDateTime;//记录最后修改时间
+                }
+                Count += item.Count;//统计每个节点文件数量
+            }
+        }
+
+        /// <summary>
+        /// 设置显示文本
+        /// </summary>
+        private void SetText()
+        {
+            pathType = File.Exists(ResourePath) ? 1 : Parent==null ? 3 : 2;
+            switch (pathType)
+            {   
+                case 1://文件
+                    Text = $"{Path.GetFileName(ResourePath)} ---时间：{LastDateTime}";
+                    break;
+                case 2://文件夹
+                    Text = $"{Path.GetFileName(ResourePath)} ---{Count} 时间:{LastDateTime}";
+                    break;
+                case 3://头节点
+                    Text = $"{ResourePath} ---{Count} 时间:{LastDateTime}";
+                    break; 
+                default:
+                    break;
+            }
+        }
+        #endregion
     }
 }
